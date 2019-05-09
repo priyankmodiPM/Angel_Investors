@@ -23,7 +23,7 @@ driver.get('https://angel.co/done-deals/new-press')
 
 '''finding the 'see more' buttons and 'details' buttons and click them'''
 count = 0 #specify count to stop searching after a limit.
-while count<=2:
+while count<=1:
     more_buttons = driver.find_elements_by_class_name("fontello-down-dir") #finds all drop downs
     for x in more_buttons:
         x.click()
@@ -73,8 +73,6 @@ while(check_exists_by_xpath("/html/body/div[1]/div[4]/div[2]/div/div/div/div/div
         dict_dates_amount[(j-1)*4+i] = list_temp #add the list of date entries at index {4(j-1)+1}(4*row number + i'th element of row)
     j+=1
 print(dict_dates_amount) #test dict_dates_amount
-# /html/body/div[1]/div[4]/div[2]/div/div/div/div/div[4]/div[1]/div[2]/div/div[1]/div[2]/div/div[3]/div[1]
-# /html/body/div[1]/div[4]/div[2]/div/div/div/div/div[4]/div[1]/div[2]/div/div[1]/div[2]/div/div[3]/div[2]
 
 print("\n")
 
@@ -92,26 +90,29 @@ print("\n")
 
 '''makes a dictionary of lists which stores the names of companies which provide the fundings at ith index corresponding to ith done deal'''
 dict_companies = {}
-j = 1
+j = 1 #keeps count of the row of done deals(1 row has 4 entries on the webpage)
 while(check_exists_by_xpath("/html/body/div[1]/div[4]/div[2]/div/div/div/div/div[4]/div[%s]/div[1]/div/div[1]/div[2]"%(j))):
-    for i in range(1,5):
+    for i in range(1,5): #iterate over the 4 done deals in each row
         element = driver.find_element_by_xpath("/html/body/div[1]/div[4]/div[2]/div/div/div/div/div[4]/div[%s]/div[%s]/div/div[1]/div[2]"%(j,i))
-        k = 1 
-        list_ordered_pairs = []
-        while k<=len(dict_dates_amount[i]):
-            t = 1
-            list_temp = []
+        k = 1 #counter to iterate over the date entries found
+        list_ordered_pairs = [] #initializing the list of order pairs (eg: [(1,[GV,Kapor]),(2,[GV,Homebrew])])
+        while k<=len(dict_dates_amount[(j-1)*4+i]): #iterate till dates are over
+            t = 1 #counter to iterate over investors corresponding to k'th funding amount
+            list_temp = [] #initializing list_temp which stores all the investors for k'th funding amount of i'th companies
             while t<=10:
-                if check_exists_by_xpath('/html/body/div[1]/div[4]/div[2]/div/div/div/div/div[4]/div[%s]/div[%s]/div/div[1]/div[2]/div/div[%s]/div[2]/div[%s]/a'%(j,i,k,t)):
+                if check_exists_by_xpath('/html/body/div[1]/div[4]/div[2]/div/div/div/div/div[4]/div[%s]/div[%s]/div/div[1]/div[2]/div/div[%s]/div[2]/div[%s]/a'%(j,i,k,t)): #checks existence of 
                     trial = driver.find_element_by_xpath('/html/body/div[1]/div[4]/div[2]/div/div/div/div/div[4]/div[%s]/div[%s]/div/div[1]/div[2]/div/div[%s]/div[2]/div[%s]/a'%(j,i,k,t))
+                    
                     if trial.text != "READ PRESS":
                         list_temp.append(trial.text)
                     t+=1
-                elif check_exists_by_xpath('/html/body/div[1]/div[4]/div[2]/div/div/div/div/div[4]/div[%s]/div[%s]/div/div[1]/div[2]/div/div/div[2]/div[%s]/a'%(j,i,t)):
-                    trial = driver.find_element_by_xpath('/html/body/div[1]/div[4]/div[2]/div/div/div/div/div[4]/div[%s]/div[%s]/div/div[1]/div[2]/div/div/div[2]/div[%s]/a'%(j,i,t))
-                    if trial.text != "READ PRESS":
-                        list_temp.append(trial.text)
-                    t+=1
+                # elif check_exists_by_xpath('/html/body/div[1]/div[4]/div[2]/div/div/div/div/div[4]/div[%s]/div[%s]/div/div[1]/div[2]/div/div/div[2]/div[%s]/a'%(j,i,t)):
+                #     if(k==1):
+                #         print("yes2,i=",(j-1)*4+i)
+                #     trial = driver.find_element_by_xpath('/html/body/div[1]/div[4]/div[2]/div/div/div/div/div[4]/div[%s]/div[%s]/div/div[1]/div[2]/div/div/div[2]/div[%s]/a'%(j,i,t))
+                #     if trial.text != "READ PRESS":
+                #         list_temp.append(trial.text)
+                #     t+=1
                 else:
                     t+=1
 
