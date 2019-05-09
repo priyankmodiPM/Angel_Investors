@@ -2,7 +2,9 @@ from selenium import webdriver
 import time
 from selenium.common.exceptions import WebDriverException
 from selenium.common.exceptions import NoSuchElementException        
-
+import csv
+import io
+import codecs
 
 '''checks for validity of a given xpath'''
 def check_exists_by_xpath(xpath):
@@ -36,30 +38,85 @@ while count<=20:
     list_details = [x.text for x in details]
     count+=1
 
+
 '''makes a dictionary of lists which stores the amount of fundings at ith index corresponding to ith done deal'''
-list_amount = {}
-j = 1
+dict_amount = {} #initializing empty dict
+j = 1 #keeps count of the row of done deals(1 row has 4 entries on the webpage)
 while(check_exists_by_xpath("/html/body/div[1]/div[4]/div[2]/div/div/div/div/div[4]/div[%s]/div[1]/div/div[1]/div[2]"%(j))):
-    for i in range(1,5):
-        element = driver.find_element_by_xpath("/html/body/div[1]/div[4]/div[2]/div/div/div/div/div[4]/div[%s]/div[%s]/div/div[1]/div[2]"%(j,i))
-        list_temp = []
-        k = 1 
-        while check_exists_by_xpath('/html/body/div[1]/div[4]/div[2]/div/div/div/div/div[4]/div[%s]/div[%s]/div/div[1]/div[2]/div/div[%s]/div[2]/div[1]'%(j,i,k)):
-            trial = element.find_element_by_xpath('/html/body/div[1]/div[4]/div[2]/div/div/div/div/div[4]/div[%s]/div[%s]/div/div[1]/div[2]/div/div[%s]/div[2]/div[1]'%(j,i,k))
+    for i in range(1,5): #iterate over the 4 done deals in each row
+        element = driver.find_element_by_xpath("/html/body/div[1]/div[4]/div[2]/div/div/div/div/div[4]/div[%s]/div[%s]/div/div[1]/div[2]"%(j,i)) #finds the text part of the done deal
+        list_temp = [] #stores the amount entries for a done deal
+        k = 1 #counter to iterate over the amount entries found
+        while check_exists_by_xpath('/html/body/div[1]/div[4]/div[2]/div/div/div/div/div[4]/div[%s]/div[%s]/div/div[1]/div[2]/div/div[%s]/div[2]/div[1]'%(j,i,k)): #check if the amount entry exists(to know when to stop)
+            trial = element.find_element_by_xpath('/html/body/div[1]/div[4]/div[2]/div/div/div/div/div[4]/div[%s]/div[%s]/div/div[1]/div[2]/div/div[%s]/div[2]/div[1]'%(j,i,k)) #finds the k'th entry
             k+=1
             list_temp.append(trial.text)
-        list_amount[(j-1)*4+i] = list_temp
+        dict_amount[(j-1)*4+i] = list_temp #add the list of amount entries at index {4(j-1)+1}(4*row number + i'th element of row)
     j+=1
-print(list_amount)
+print(dict_amount) #test dict_amount
+
+print("\n")
+
+'''makes a dictionary of the dates for certain funding, not acquired'''
+dict_dates_amount = {} #initializing empty dict
+j = 1 #keeps count of the row of done deals(1 row has 4 entries on the webpage)
+flag = 0
+while(check_exists_by_xpath("/html/body/div[1]/div[4]/div[2]/div/div/div/div/div[4]/div[%s]/div[1]/div/div[1]/div[2]"%(j))):
+    for i in range(1,5): #iterate over the 4 done deals in each row
+        element = driver.find_element_by_xpath("/html/body/div[1]/div[4]/div[2]/div/div/div/div/div[4]/div[%s]/div[%s]/div/div[1]/div[2]"%(j,i))
+        list_temp = [] #stores the date entries for a done deal
+        k = 1  #counter to iterate over the date entries found
+        while (check_exists_by_xpath('/html/body/div[1]/div[4]/div[2]/div/div/div/div/div[4]/div[%s]/div[%s]/div/div[1]/div[2]/div/div[%s]/div[1]'%(j,i,k)) and driver.find_element_by_xpath('/html/body/div[1]/div[4]/div[2]/div/div/div/div/div[4]/div[%s]/div[%s]/div/div[1]/div[2]/div/div[%s]/div[2]'%(j,i,k)).text != "Acquired" and driver.find_element_by_xpath('/html/body/div[1]/div[4]/div[2]/div/div/div/div/div[4]/div[%s]/div[%s]/div/div[1]/div[2]/div/div[%s]/div[2]'%(j,i,k)).text != "Acquired\nREAD PRESS"):
+            date = element.find_element_by_xpath('/html/body/div[1]/div[4]/div[2]/div/div/div/div/div[4]/div[%s]/div[%s]/div/div[1]/div[2]/div/div[%s]/div[1]'%(j,i,k))
+            k+=1
+            list_temp.append(date.text)
+        dict_dates_amount[(j-1)*4+i] = list_temp #add the list of date entries at index {4(j-1)+1}(4*row number + i'th element of row)
+    j+=1
+print(dict_dates_amount) #test dict_dates_amount
+# /html/body/div[1]/div[4]/div[2]/div/div/div/div/div[4]/div[1]/div[2]/div/div[1]/div[2]/div/div[3]/div[1]
+# /html/body/div[1]/div[4]/div[2]/div/div/div/div/div[4]/div[1]/div[2]/div/div[1]/div[2]/div/div[3]/div[2]
 
 print("\n")
 
 '''makes a dictionary of strings, where ith string is the name of main investor for ith company'''
-list_name = {}
+dict_name = {}
 var = 1
 while(check_exists_by_xpath("/html/body/div[1]/div[4]/div[2]/div/div/div/div/div[4]/div[%s]/div[1]/div/div[1]/div[1]/div[2]/a"%(var))):
     for i in range(1,5):
         name = driver.find_element_by_xpath("/html/body/div[1]/div[4]/div[2]/div/div/div/div/div[4]/div[%s]/div[%s]/div/div[1]/div[1]/div[2]/a"%(var,i))
-        list_name[(var-1)*4+i] = name.text
+        dict_name[(var-1)*4+i] = name.text
     var+=1
-print(list_name)
+print(dict_name)
+
+print("\n")
+
+'''makes a dictionary of lists which stores the names of companies which provide the fundings at ith index corresponding to ith done deal'''
+dict_companies = {}
+j = 1
+while(check_exists_by_xpath("/html/body/div[1]/div[4]/div[2]/div/div/div/div/div[4]/div[%s]/div[1]/div/div[1]/div[2]"%(j))):
+    for i in range(1,5):
+        element = driver.find_element_by_xpath("/html/body/div[1]/div[4]/div[2]/div/div/div/div/div[4]/div[%s]/div[%s]/div/div[1]/div[2]"%(j,i))
+        k = 1 
+        list_ordered_pairs = []
+        while k<=len(dict_dates_amount[i]):
+            t = 1
+            list_temp = []
+            while t<=10:
+                if check_exists_by_xpath('/html/body/div[1]/div[4]/div[2]/div/div/div/div/div[4]/div[%s]/div[%s]/div/div[1]/div[2]/div/div[%s]/div[2]/div[%s]/a'%(j,i,k,t)):
+                    trial = driver.find_element_by_xpath('/html/body/div[1]/div[4]/div[2]/div/div/div/div/div[4]/div[%s]/div[%s]/div/div[1]/div[2]/div/div[%s]/div[2]/div[%s]/a'%(j,i,k,t))
+                    if trial.text != "READ PRESS":
+                        list_temp.append(trial.text)
+                    t+=1
+                elif check_exists_by_xpath('/html/body/div[1]/div[4]/div[2]/div/div/div/div/div[4]/div[%s]/div[%s]/div/div[1]/div[2]/div/div/div[2]/div[%s]/a'%(j,i,t)):
+                    trial = driver.find_element_by_xpath('/html/body/div[1]/div[4]/div[2]/div/div/div/div/div[4]/div[%s]/div[%s]/div/div[1]/div[2]/div/div/div[2]/div[%s]/a'%(j,i,t))
+                    if trial.text != "READ PRESS":
+                        list_temp.append(trial.text)
+                    t+=1
+                else:
+                    t+=1
+
+            list_ordered_pairs.append((k,list_temp))
+            k+=1
+        dict_companies[(j-1)*4 + i] = (list_ordered_pairs)
+    j+=1
+print(dict_companies)
